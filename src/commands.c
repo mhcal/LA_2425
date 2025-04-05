@@ -1,52 +1,7 @@
-#include <assert.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#define LINE_SIZE 1024
-#define ROW_SIZE 10
-#define COL_SIZE 26
-
-typedef struct estado {
-	bool looping;
-	char board[ROW_SIZE][COL_SIZE];
-	int num_rows;
-	int num_cols;
-	bool board_loaded;
-} ESTADO;
-
-typedef bool (*COMANDO)(char cmd, char *arg, ESTADO *e);
-
-void print_board(ESTADO *e) {
-	if (e->board_loaded) {
-		printf("  ");
-		for (int i = 0; i < e->num_cols; i++)
-			printf("%c ", 'a' + i);
-		putchar('\n');
-		for (int i = 0; i < e->num_rows; i++) {
-			printf("%d ", i);
-			for (int j = 0; j < e->num_cols; j++)
-				printf("%c ", e->board[i][j]);
-			putchar('\n');
-		}
-	}
-	else {
-		printf("O tabuleiro ainda não foi carregado.\n");
-	}
-}
-
-bool parse_coord(char *coord, int *col, int *row, ESTADO *e) {
-	if (strlen(coord) != 2) {
-		fprintf(stderr, "Erro: formato inválido.\n");
-		return false;
-	}
-	*col = coord[0] - 'a';
-	*row = coord[1] - '0';
-	if (*col < 0 || *col >= e->num_cols || *row < 0 || *row >= e->num_rows) {
-		fprintf(stderr, "Erro: coordenadas estão fora dos limites do tabuleiro atual.\n");
-		return false;
-	}
-	return true;
-}
+#include "commands.h"
+#include "state.h"
 
 bool gravar(char cmd, char *arg, ESTADO *e) {
 	if (cmd == 'g') {
@@ -54,7 +9,9 @@ bool gravar(char cmd, char *arg, ESTADO *e) {
 			fprintf(stderr, "Erro: o comando gravar precisa de um argumento.\n");
 			return false;
 		}
-		FILE *f = fopen(arg, "w");
+		char path[LINE_SIZE];
+		snprintf(path, sizeof(path), "boards/%s", arg);
+		FILE *f = fopen(path, "w");
 		if (!f) {
 			fprintf(stderr, "Erro: não foi possível abrir o arquivo para gravação.\n");
 			return false;
@@ -65,7 +22,7 @@ bool gravar(char cmd, char *arg, ESTADO *e) {
 				fprintf(f, "%c", e->board[i][j]);
 			fprintf(f, "\n");
 		}
-		printf("Gravando em %s\n", arg);
+		printf("Gravando em %s\n", path);
 		fclose(f);
 		return true;
 	}
@@ -90,7 +47,9 @@ bool ler(char cmd, char *arg, ESTADO *e) {
 			fprintf(stderr, "Erro: o comando ler precisa de um argumento.\n");
 			return false;
 		}
-		FILE *f = fopen(arg, "r");
+		char path[LINE_SIZE];
+		snprintf(path, sizeof(path), "boards/%s", arg);
+		FILE *f = fopen(path, "r");
 		if (!f) {
 			fprintf(stderr, "Erro: não foi possível abrir o arquivo para leitura.\n");
 			return false;
@@ -173,29 +132,4 @@ bool riscar(char cmd, char *arg, ESTADO *e) {
 	}
 	else
 		return false;
-}
-
-int main() {
-	COMANDO comandos[] = {sair, ler, gravar, pintar, riscar, NULL};
-	ESTADO estado;
-	estado.looping = true;
-	while (estado.looping) {
-		printf("> ");
-		char line[LINE_SIZE] = {0};
-		if (fgets(line, LINE_SIZE, stdin) != NULL) {
-			assert(line[strlen(line) - 1] == '\n');
-		}
-		else
-			estado.looping = false;
-		char cmd;
-		char arg[LINE_SIZE] = {0};
-		line[strcspn(line, "\n")] = '\0';
-		int num_args = sscanf(line, "%c %s", &cmd, arg);
-		
-		bool ret = false;
-		for (int i = 0; !ret && comandos[i] != NULL; i++)
-			ret = comandos[i](cmd, (num_args >= 2) ? arg: NULL, &estado);
-		putchar('\n');
-	}
-	return 0;
 }
