@@ -21,6 +21,10 @@ void print_board(ESTADO *e) {
 }
 
 bool parse_coord(char *coord, int *col, int *row, ESTADO *e) {
+	if (strlen(coord) < 2 || coord[0] < 97 || coord[0] > 122) {
+		fprintf(stderr, "Erro: formato invalido");
+		return false;
+	}
 	*col = coord[0] - 'a';
 	*row = atoi(coord + 1);
 	if (*col < 0 || *col >= e->num_cols || *row < 0 || *row >= e->num_rows) {
