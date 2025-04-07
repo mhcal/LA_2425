@@ -74,7 +74,7 @@ bool ler(char cmd, char *arg, ESTADO *e) {
 		}
 		fclose(f);
 		e->board_loaded = true;
-		printf("Lendo de %s\n", arg);
+		printf("Lendo de %s\n", path);
 		print_board(e);
 		return true;
 	}

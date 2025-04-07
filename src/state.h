@@ -2,9 +2,10 @@
 #define STATE_H
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 #define LINE_SIZE 1024
-#define ROW_SIZE 10
+#define ROW_SIZE 99
 #define COL_SIZE 26
 
 typedef struct estado {

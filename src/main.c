@@ -2,6 +2,7 @@
 #include <string.h>
 #include <assert.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include "state.h"
 #include "commands.h"
 #define LINE_SIZE 1024
@@ -13,9 +14,8 @@ int main() {
 	while (estado.looping) {
 		printf("> ");
 		char line[LINE_SIZE] = {0};
-		if (fgets(line, LINE_SIZE, stdin) != NULL) {
+		if (fgets(line, LINE_SIZE, stdin) != NULL)
 			assert(line[strlen(line) - 1] == '\n');
-		}
 		else
 			estado.looping = false;
 		char cmd;
