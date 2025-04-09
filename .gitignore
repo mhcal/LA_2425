@@ -1,5 +1,5 @@
 jogo
 testar
 *.o
-boards/*
-!boards/example
+build/*
+!build/boards/
