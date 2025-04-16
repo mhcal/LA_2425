@@ -27,7 +27,8 @@ typedef struct estado {
 	int num_cols;
 	bool board_loaded;
 	MOVE *move_stack;
-	int stack_size;
+	int num_moves;
+	bool help_trigger;
 } ESTADO;
 
 typedef bool (*COMANDO)(char *arg, ESTADO *e);

@@ -96,9 +96,9 @@ bool pintar(char *arg, ESTADO *e) {
 	if (!parse_coord(arg, &col, &row, e))
 		return false;
 	char current = e->board[row][col];
-	if (current == '#')
+	if (is_riscada(current))
 		printf("Letra na posição %s está riscada.\n", arg);
-	else if (current <= 90)
+	else if (is_branca(current))
 		printf("Letra na posição %s já está maiúscula.\n", arg);
 	else {
 		push_move(row, col, current, e);
@@ -122,7 +122,7 @@ bool riscar(char *arg, ESTADO *e) {
 	if (!parse_coord(arg, &col, &row, e))
 		return false;
 	char current = e->board[row][col];
-	if (current == '#')
+	if (is_riscada(current))
 		printf("A posição %s já foi riscada.\n", arg);
 	else {
 		push_move(row, col, current, e);
@@ -138,7 +138,7 @@ bool undo(char *arg, ESTADO *e) {
 		fprintf(stderr, "Erro: nenhum tabuleiro foi carregado.\n");
 		return false;
 	}
-	if (e->move_stack == NULL || e->stack_size == 0) {
+	if (e->move_stack == NULL || e->num_moves == 0) {
 		fprintf(stderr, "Erro: não há jogadas para desfazer.\n");
 		return false;
 	}
@@ -150,8 +150,8 @@ bool undo(char *arg, ESTADO *e) {
 			return false;
 		}
 	}
-	if (passos > e->stack_size) {
-		fprintf(stderr, "Erro: só existem %d jogadas no histórico.\n", e->stack_size);
+	if (passos > e->num_moves) {
+		fprintf(stderr, "Erro: só existem %d jogadas no histórico.\n", e->num_moves);
 		return false;
 	}
 	for (int i = 0; i < passos; i++)
@@ -159,4 +159,45 @@ bool undo(char *arg, ESTADO *e) {
 	printf("Desfazendo %d jogadas.\n", passos);
 	print_board(e);
 	return true;
+}
+
+bool verificar(char *arg, ESTADO *e) {
+	if (arg != NULL) {
+		fprintf(stderr, "Erro: função verificar não recebe argumentos.\n");
+		return false;
+	}
+	if (!e->board_loaded) {
+		fprintf(stderr, "Erro: nenhum tabuleiro foi carregado.\n");
+		return false;
+	}
+	print_board(e);
+	putchar('\n');
+	bool violation_found = false;
+	for (int i = 0; i < e->num_rows; i++) {
+		for (int j = 0; j < e->num_cols; j++) {
+			if (is_branca(e->board[i][j])) {
+				if (!(verifica_branca(i, j, e))) {
+					printf("Violação encontrada: letra '%c' na posição %c%d tem réplica pintada a branco na mesma linha ou coluna.\n", e->board[i][j], 'a' + j, i + 1);
+					violation_found = true;
+				}
+			}
+		}
+	}
+	for (int i = 0; i < e->num_rows; i++) {
+		for (int j = 0; j < e->num_cols; j++) {
+			if (is_riscada(e->board[i][j])) {
+				if (!(verifica_riscada(i, j, e))) {
+					printf("Violação encontrada: posição %c%d está riscada mas existem vizinhos ortogonais não pintados de branco.\n", 'a' + j, i + 1);
+					violation_found = true;
+				}
+			}
+		}
+	}
+	if (!(verifica_caminho(e))) {
+		printf("Violação encontrada: não existe um caminho ortogonal entre todas as casas pintadas de branco.\n");
+		violation_found = true;
+	}
+	if (!violation_found)
+		printf("Nenhuma violação de regras encontrada no estado atual.\n");
+	return !(violation_found);
 }

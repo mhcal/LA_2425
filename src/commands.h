@@ -10,5 +10,6 @@ bool gravar(char *arg, ESTADO *e);
 bool pintar(char *arg, ESTADO *e);
 bool riscar(char *arg, ESTADO *e);
 bool undo(char *arg, ESTADO *e);
+bool verificar(char *arg, ESTADO *e);
 
 #endif

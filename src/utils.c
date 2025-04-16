@@ -14,7 +14,7 @@ bool push_move(int row, int col, char prev, ESTADO *e) {
 	move->prev = prev;
 	move->next = e->move_stack;
 	e->move_stack = move;
-	e->stack_size++;
+	e->num_moves++;
 	return true;
 }
 
@@ -27,7 +27,7 @@ bool pop_move(ESTADO *e) {
 	MOVE *temp = e->move_stack;
 	e->move_stack = e->move_stack->next;
 	free(temp);
-	e->stack_size--;
+	e->num_moves--;
 	return true;
 }
 
@@ -41,7 +41,7 @@ void free_move_stack(ESTADO *e) {
 		free(temp);
 	}
 	e->move_stack = NULL;
-	e->stack_size = 0;
+	e->num_moves = 0;
 }
 
 bool allocate_board(int rows, int cols, ESTADO *e) {
@@ -99,6 +99,10 @@ void print_board(ESTADO *e) {
 		printf("O tabuleiro ainda não foi carregado.\n");
 }
 
+bool is_valid_coord(int row, int col, ESTADO *e) {
+	return (row >= 0 && row < e->num_rows && col >= 0 && col < e->num_cols);
+}
+
 bool parse_coord(char *coord, int *col, int *row, ESTADO *e) {
 	if (strlen(coord) < 2 || coord[0] < 97 || coord[0] > 122) {
 		fprintf(stderr, "Erro: formato invalido.\n");
@@ -106,9 +110,99 @@ bool parse_coord(char *coord, int *col, int *row, ESTADO *e) {
 	}
 	*col = coord[0] - 'a';
 	*row = atoi(coord + 1) - 1;
-	if (*col < 0 || *col >= e->num_cols || *row < 0 || *row >= e->num_rows) {
-		fprintf(stderr, "Erro: coordenadas estão fora dos limites do tabuleiro atual.\n");
+	if (!(is_valid_coord(*row, *col, e)))
 		return false;
+	return true;
+}
+
+bool is_branca(char c) {
+	return (c >= 'A' && c <= 'Z');
+}
+
+bool is_riscada(char c) {
+	return (c == '#');
+}
+
+char to_lower(char c) {
+	if (is_branca(c))
+		return c + 32;
+	else
+		return c;
+}
+
+void dfs_connectivity(int row, int col, ESTADO *e, bool **visited) {
+	if (!(is_valid_coord(row, col, e)) || !(is_branca(e->board[row][col])) || visited[row][col])
+		return;
+	visited[row][col] = true;
+	int directions[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+	for (int i = 0; i < 4; i++) {
+		int dr = row + directions[i][0];
+		int dc = col + directions[i][1];
+		dfs_connectivity(dr, dc, e, visited);
+	}
+}
+
+bool verifica_branca(int row, int col, ESTADO *e) {
+	char letter = to_lower(e->board[row][col]);
+	// verifica linha (linha fixa, coluna variavel)
+	for (int i = 0; i < e->num_cols; i++) {
+		char current = e->board[row][i];
+		if (i != col && is_branca(current) && to_lower(current) == letter)
+			return false;
+	}
+	// verifica coluna (linha variavel, coluna fixa)
+	for (int i = 0; i < e->num_rows; i++) {
+		char current = e->board[i][col];
+		if (i != row && is_branca(current) && to_lower(current) == letter)
+			return false;
 	}
 	return true;
+}
+
+bool verifica_riscada(int row, int col, ESTADO *e) {
+	// up, down, left, right
+	int directions[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+	for (int i = 0; i < 4; i++) {
+		int dr = row + directions[i][0];
+		int dc = col + directions[i][1];
+		if (is_valid_coord(dr, dc, e) && !(is_branca(e->board[dr][dc])))
+			return false;
+	}
+	return true;
+}
+
+bool verifica_caminho(ESTADO *e) {
+	int start_row = -1;
+	int start_col = -1;
+	// encontrar coord. da primeira letra pintada
+	for (int i = 0; i < e->num_rows && start_row == -1; i++) {
+		for (int j = 0; j < e->num_cols && start_col == -1; j++) {
+			if (is_branca(e->board[i][j])) {
+				start_row = i;
+				start_col = j;
+			}
+		}
+	}
+	// caso trivial
+	if (start_row == -1)
+		return true;
+	// alocação de memória para matriz de conectividade
+	bool **visited = (bool **)malloc(e->num_rows * sizeof(bool *));
+	for (int i = 0; i < e->num_rows; i++) {
+		// calloc inicializa os blocos de memória a 0s (valor padrão da matriz)
+		visited[i] = (bool *)calloc(e->num_cols, sizeof(bool));
+	}
+	dfs_connectivity(start_row, start_col, e, visited);
+	bool all_connected = true;
+	for (int i = 0; i < e->num_rows; i++) {
+		for (int j = 0; j < e->num_cols; j++) {
+			if (is_branca(e->board[i][j]) && !(visited[i][j]))
+				all_connected = false;
+		}
+	}
+	// liberta memória
+	for (int i = 0; i < e->num_rows; i++)
+		free(visited[i]);
+	free(visited);
+	return all_connected;
 }

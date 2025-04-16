@@ -15,7 +15,6 @@ OBJ = $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
 all: jogo
 
-# Link all object files to produce the final binary
 jogo: $(OBJ) | $(BOARD_DIR)
 	$(CC) $(CFLAGS) -o $(BUILD_DIR)/jogo $^ $(LDLIBS)
 
