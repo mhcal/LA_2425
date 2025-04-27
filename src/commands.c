@@ -79,7 +79,6 @@ bool ler(char *arg, ESTADO *e) {
 	fclose(f);
 	e->board_loaded = true;
 	printf("Lendo de %s\n", path);
-	print_board(e);
 	return true;
 }
 
@@ -105,7 +104,6 @@ bool pintar(char *arg, ESTADO *e) {
 		e->board[row][col] = e->board[row][col] - 32;
 		printf("Letra na posição %s foi colocada em maiúscula.\n", arg);
 	}
-	print_board(e);
 	return true;
 }
 
@@ -129,7 +127,6 @@ bool riscar(char *arg, ESTADO *e) {
 		e->board[row][col] = '#';
 		printf("Letra na posição %s foi riscada.\n", arg);
 	}
-	print_board(e);
 	return true;
 }
 
@@ -157,7 +154,6 @@ bool undo(char *arg, ESTADO *e) {
 	for (int i = 0; i < passos; i++)
 		pop_move(e);
 	printf("Desfazendo %d jogadas.\n", passos);
-	print_board(e);
 	return true;
 }
 
@@ -170,8 +166,6 @@ bool verificar(char *arg, ESTADO *e) {
 		fprintf(stderr, "Erro: nenhum tabuleiro foi carregado.\n");
 		return false;
 	}
-	print_board(e);
-	putchar('\n');
 	bool violation_found = false;
 	for (int i = 0; i < e->num_rows; i++) {
 		for (int j = 0; j < e->num_cols; j++) {
@@ -193,6 +187,7 @@ bool verificar(char *arg, ESTADO *e) {
 			}
 		}
 	}
+
 	if (!(verifica_caminho(e))) {
 		printf("Violação encontrada: não existe um caminho ortogonal entre todas as casas pintadas de branco.\n");
 		violation_found = true;

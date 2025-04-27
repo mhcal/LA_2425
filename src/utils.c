@@ -130,8 +130,9 @@ char to_lower(char c) {
 		return c;
 }
 
+
 void dfs_connectivity(int row, int col, ESTADO *e, bool **visited) {
-	if (!(is_valid_coord(row, col, e)) || !(is_branca(e->board[row][col])) || visited[row][col])
+	if (!(is_valid_coord(row, col, e)) || is_riscada(e->board[row][col]) || visited[row][col])
 		return;
 	visited[row][col] = true;
 	int directions[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
@@ -143,6 +144,8 @@ void dfs_connectivity(int row, int col, ESTADO *e, bool **visited) {
 }
 
 bool verifica_branca(int row, int col, ESTADO *e) {
+	if (!is_branca(e->board[row][col]))
+		return false;
 	char letter = to_lower(e->board[row][col]);
 	// verifica linha (linha fixa, coluna variavel)
 	for (int i = 0; i < e->num_cols; i++) {
@@ -160,6 +163,8 @@ bool verifica_branca(int row, int col, ESTADO *e) {
 }
 
 bool verifica_riscada(int row, int col, ESTADO *e) {
+	if (!is_riscada(e->board[row][col]))
+		return false;
 	// up, down, left, right
 	int directions[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 	for (int i = 0; i < 4; i++) {
@@ -183,8 +188,8 @@ bool verifica_caminho(ESTADO *e) {
 			}
 		}
 	}
-	// caso trivial
-	if (start_row == -1)
+	// caso trivial: nenhuma casa pintada
+	if (start_row == -1 || start_col == -1)
 		return true;
 	// alocação de memória para matriz de conectividade
 	bool **visited = (bool **)malloc(e->num_rows * sizeof(bool *));
@@ -196,7 +201,7 @@ bool verifica_caminho(ESTADO *e) {
 	bool all_connected = true;
 	for (int i = 0; i < e->num_rows; i++) {
 		for (int j = 0; j < e->num_cols; j++) {
-			if (is_branca(e->board[i][j]) && !(visited[i][j]))
+			if (is_branca(e->board[i][j]) && !visited[i][j])
 				all_connected = false;
 		}
 	}

@@ -49,8 +49,10 @@ void repl() {
 		cmd -= 'A';
 		if (cmd < 0 || cmd >= 60)
 			fprintf(stderr, "Erro: código de comando inválido.\n");
-		else
-			(void)comandos[(int)cmd]((num_args >= 2) ? arg : NULL, &estado);
+		else if (comandos[(int)cmd]((num_args >= 2) ? arg : NULL, &estado)) {
+			putchar('\n');
+			print_board(&estado);
+		}
 		putchar('\n');
 	}
 	free_board(&estado);
