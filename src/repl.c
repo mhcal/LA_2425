@@ -9,6 +9,8 @@
 
 void repl() {
 	COMANDO comandos[60];
+	for (int i = 0; i < 60; i++)
+		comandos[i] = NULL;
 	comandos['s' - 'A'] = sair;
 	comandos['l' - 'A'] = ler;
 	comandos['g' - 'A'] = gravar;
@@ -16,6 +18,7 @@ void repl() {
 	comandos['r' - 'A'] = riscar;
 	comandos['d' - 'A'] = undo;
 	comandos['v' - 'A'] = verificar;
+	//comandos['a' - 'A'] = ajuda;
 	ESTADO estado;
 	estado.looping = true;
 	estado.board = NULL;
@@ -47,7 +50,7 @@ void repl() {
 		char arg[LINE_SIZE] = {0};
 		int num_args = sscanf(line, "%c %s", &cmd, arg);
 		cmd -= 'A';
-		if (cmd < 0 || cmd >= 60)
+		if (cmd < 0 || cmd >= 60 || comandos[(int)cmd] == NULL)
 			fprintf(stderr, "Erro: código de comando inválido.\n");
 		else if (comandos[(int)cmd]((num_args >= 2) ? arg : NULL, &estado)) {
 			putchar('\n');

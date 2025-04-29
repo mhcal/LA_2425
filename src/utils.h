@@ -18,5 +18,8 @@ void dfs_connectivity(int row, int col, ESTADO *e, bool **visited);
 bool verifica_branca(int row, int col, ESTADO *e);
 bool verifica_riscada(int row, int col, ESTADO *e);
 bool verifica_caminho(ESTADO *e);
+bool is_minuscula(char c);
+void pinta_vizinhos(int row, int col, ESTADO *e);
+void risca_iguais(int row, int col, ESTADO *e);
 
 #endif

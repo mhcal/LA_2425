@@ -89,7 +89,7 @@ void test_verifica_riscada() {
 	CU_ASSERT_TRUE(verifica_riscada(1,1,&e));
 
 	riscar("e5",&e);
-	pintar("e4",&e);
+	riscar("e4",&e);
 	
 	CU_ASSERT_FALSE(verifica_riscada(4,4,&e));
 

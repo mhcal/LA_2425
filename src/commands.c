@@ -158,12 +158,12 @@ bool undo(char *arg, ESTADO *e) {
 }
 
 bool verificar(char *arg, ESTADO *e) {
-	if (arg != NULL) {
-		fprintf(stderr, "Erro: função verificar não recebe argumentos.\n");
-		return false;
-	}
 	if (!e->board_loaded) {
 		fprintf(stderr, "Erro: nenhum tabuleiro foi carregado.\n");
+		return false;
+	}
+	if (arg != NULL) {
+		fprintf(stderr, "Erro: comando verificar não recebe argumentos.\n");
 		return false;
 	}
 	bool violation_found = false;
@@ -181,18 +181,43 @@ bool verificar(char *arg, ESTADO *e) {
 		for (int j = 0; j < e->num_cols; j++) {
 			if (is_riscada(e->board[i][j])) {
 				if (!(verifica_riscada(i, j, e))) {
-					printf("Violação encontrada: posição %c%d está riscada mas existem vizinhos ortogonais não pintados de branco.\n", 'a' + j, i + 1);
+					printf("Violação encontrada: posição %c%d está riscada e tem vizinhos ortogonais riscados.\n", 'a' + j, i + 1);
 					violation_found = true;
 				}
 			}
 		}
 	}
-
 	if (!(verifica_caminho(e))) {
 		printf("Violação encontrada: não existe um caminho ortogonal entre todas as casas pintadas de branco.\n");
 		violation_found = true;
 	}
 	if (!violation_found)
 		printf("Nenhuma violação de regras encontrada no estado atual.\n");
-	return !(violation_found);
+	return !violation_found;
 }
+
+/*
+bool ajuda(char *arg, ESTADO *e) {
+	if (!e->board_loaded) {
+		fprintf(stderr, "Erro: nenhum tabuleiro foi carregado.\n");
+		return false;
+	}
+	if (arg != NULL) {
+		fprintf(stderr, "Erro: comando ajuda não recebe argumentos.\n");
+		return false;
+	}
+	if (!verificar(arg, e)) {
+		fprintf(stderr, "Erro: o tabuleiro atual é inválido. Por favor corrija antes de invocar comando ajuda");
+		return false;
+	}
+	for (int r = 0; r < e->num_rows; r++) {
+		for (int c = 0; c < e->num_cols; c++) {
+			if (is_riscada(e->board[r][c]))
+				pinta_vizinhos(r, c, e);
+			if (is_branca(e->board[r][c]))
+				risca_iguais(r, c, e);
+		}
+	}
+	return true;
+}
+*/

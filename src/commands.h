@@ -11,5 +11,6 @@ bool pintar(char *arg, ESTADO *e);
 bool riscar(char *arg, ESTADO *e);
 bool undo(char *arg, ESTADO *e);
 bool verificar(char *arg, ESTADO *e);
+bool ajuda(char *arg, ESTADO *e);
 
 #endif

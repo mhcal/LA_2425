@@ -123,13 +123,16 @@ bool is_riscada(char c) {
 	return (c == '#');
 }
 
+bool is_minuscula(char c) {
+	return (c >= 97 && c <= 122);
+}
+
 char to_lower(char c) {
 	if (is_branca(c))
 		return c + 32;
 	else
 		return c;
 }
-
 
 void dfs_connectivity(int row, int col, ESTADO *e, bool **visited) {
 	if (!(is_valid_coord(row, col, e)) || is_riscada(e->board[row][col]) || visited[row][col])
@@ -162,15 +165,16 @@ bool verifica_branca(int row, int col, ESTADO *e) {
 	return true;
 }
 
+// verifica_riscada agora apenas verifica se há vizinhos ortogonais riscados. a regra das casas vizinhas brancas deverá ser enforçada pelo comando ajuda.
 bool verifica_riscada(int row, int col, ESTADO *e) {
 	if (!is_riscada(e->board[row][col]))
 		return false;
-	// up, down, left, right
+	// up, down, left right
 	int directions[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 	for (int i = 0; i < 4; i++) {
 		int dr = row + directions[i][0];
 		int dc = col + directions[i][1];
-		if (is_valid_coord(dr, dc, e) && !(is_branca(e->board[dr][dc])))
+		if (is_valid_coord(dr, dc, e) && is_riscada(e->board[dr][dc]))
 			return false;
 	}
 	return true;
@@ -210,4 +214,34 @@ bool verifica_caminho(ESTADO *e) {
 		free(visited[i]);
 	free(visited);
 	return all_connected;
+}
+
+void pinta_vizinhos(int row, int col, ESTADO *e) {
+	if (!is_riscada(e->board[row][col]))
+		return;
+	int directions[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+	for (int i = 0; i < 4; i++) {
+		int dr = directions[i][0];
+		int dc = directions[i][1];
+		if (is_valid_coord(dr, dc, e) && is_minuscula(e->board[dr][dc]))
+			e->board[dr][dc] -= 32;
+	}
+}
+
+void risca_iguais(int row, int col, ESTADO *e) {
+	if (!is_branca(e->board[row][col]))
+		return;
+	char letter = to_lower(e->board[row][col]);
+	// procura na linha (linha fixa, coluna variavel)
+	for (int i = 0; i < e->num_cols; i++) {
+		char current = e->board[row][i];
+		if (i != col && current == letter)
+			e->board[row][i] = '#';
+	}
+	// procura na coluna (linha variavel, coluna fixa)
+	for (int i = 0; i < e->num_rows; i++) {
+		char current = e->board[i][col];
+		if (i != row && current == letter)
+			e->board[i][col] = '#';
+	}
 }

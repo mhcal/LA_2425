@@ -272,7 +272,7 @@ void test_verificar() {
 
 	char wrong2[5][5] = {
 		{'E', '#', 'A', 'D', 'c'},
-		{'D', 'C', '#', 'E', '#'},
+		{'#', 'C', '#', 'E', '#'},
 		{'B', '#', 'D', 'C', 'E'},
 		{'C', 'D', 'E', '#', 'B'},
 		{'A', '#', 'C', 'B', '#'}
@@ -283,7 +283,6 @@ void test_verificar() {
 			e.board[i][j] = wrong2[i][j];
 	}
 
-	// Non uppercase neighboor crossed position violation expected
 	CU_ASSERT_FALSE(verificar(NULL,&e));
 
 	char wrong3[5][5] = {
