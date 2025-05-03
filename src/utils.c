@@ -15,6 +15,8 @@ bool push_move(int row, int col, char prev, ESTADO *e) {
 	move->next = e->move_stack;
 	e->move_stack = move;
 	e->num_moves++;
+	if (e->ajuda_dada)
+		e->num_ajuda++;
 	return true;
 }
 
@@ -272,9 +274,10 @@ ESTADO *copy_estado(ESTADO *src) {
 	dest->num_cols = src->num_cols;
 	dest->board_loaded = src->board_loaded;
 	dest->num_moves = 0;
+	dest->num_ajuda = src->num_ajuda;
+	dest->ajuda_dada = src->ajuda_dada;
 	dest->move_stack = NULL;
-	dest->num_ajuda = 0;
-	dest->num_ajuda = false;
+	// copia board
 	if (src->board_loaded && src->board != NULL) {
 		dest->board = (char **)malloc(src->num_rows * sizeof(char *));
 		if (dest->board == NULL) {
@@ -297,6 +300,34 @@ ESTADO *copy_estado(ESTADO *src) {
 	}
 	else
 		dest->board = NULL;
+	// copia stack de jogadas
+	if (src->move_stack != NULL) {
+		MOVE *temp_stack = NULL;
+		MOVE *current = src->move_stack;
+		while (current != NULL) {
+			MOVE *new_move = (MOVE *)malloc(sizeof(MOVE));
+			new_move->row = current->row;
+			new_move->col = current->col;
+			new_move->prev = current->prev;
+			new_move->next = temp_stack;
+			temp_stack = new_move;
+			current = current->next;
+		}
+		current = temp_stack;
+		// inverte a stack para a ordem correta
+		while (current != NULL) {
+			MOVE *new_move = (MOVE *)malloc(sizeof(MOVE));
+			new_move->row = current->row;
+			new_move->col = current->col;
+			new_move->prev = current->prev;
+			new_move->next = dest->move_stack;
+			dest->move_stack = new_move;
+			dest->num_moves++;
+			MOVE *to_free = current;
+			current = current->next;
+			free(to_free);
+		}
+	}
 	return dest;
 }
 
@@ -360,12 +391,13 @@ bool dfs(ESTADO *e) {
 		return true;
 	int row = pos.row; int col = pos.col;
 	char prev = e->board[row][col];
+	push_move(row, col, prev, e);
 	e->board[row][col] -= 32;
 	if (verifica_aux(e) && dfs(e))
 		return true;
 	e->board[row][col] = '#';
 	if (verifica_aux(e) && dfs(e))
 		return true;
-	e->board[row][col] = prev;
+	pop_move(e, 1);
 	return false;
 }

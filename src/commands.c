@@ -40,6 +40,20 @@ bool gravar(PARAMETROS *p) {
 			fprintf(f, "%c", p->estado->board[i][j]);
 		fprintf(f, "\n");
 	}
+	if (p->estado->num_moves > 0) {
+		fprintf(f, "%d\n", p->estado->num_moves);
+		// grava a stack do ultimo elemento (mais antigo) ate o primeiro (mais novo)
+		MOVE **moves_array = (MOVE **)malloc(p->estado->num_moves * sizeof(MOVE *));
+		MOVE *current = p->estado->move_stack;
+		int indice = 0;
+		while (current != NULL && indice < p->estado->num_moves) {
+			moves_array[indice++] = current;
+			current = current->next;
+		}
+		for (int i = indice - 1; i >= 0; i--)
+			fprintf(f, "%d %d %c\n", moves_array[i]->row, moves_array[i]->col, moves_array[i]->prev);
+		free(moves_array);
+	}
 	if (!p->suppress)
 		printf("Gravando em %s\n", path);
 	fclose(f);
@@ -96,6 +110,21 @@ bool ler(PARAMETROS *p) {
 		for (int j = 0; j < p->estado->num_cols; j++)
 			p->estado->board[i][j] = line[j];
 	}
+	int num_moves;
+	if (fscanf(f, "%d\n", &num_moves) == 1) {
+		free_move_stack(p->estado);
+		for (int i = 0; i < num_moves; i++) {
+			int row, col;
+			char prev;
+			if (fscanf(f, "%d %d %c\n", &row, &col, &prev) != 3) {
+				fprintf(stderr, "Erro: formato do arquivo inválido (histórico de jogadas).\n");
+				free_move_stack(p->estado);
+				fclose(f);
+				return false;
+			}
+			push_move(row, col, prev, p->estado);
+		}
+	}
 	fclose(f);
 	p->estado->board_loaded = true;
 	if (!p->suppress)
@@ -105,7 +134,7 @@ bool ler(PARAMETROS *p) {
 
 bool pintar(PARAMETROS *p) {
 	if (!p->estado->board_loaded) {
-		fprintf(stderr, "Erro: nenhum tabuleiro carregado.\n");
+		fprintf(stderr, "Erro: nenhum tabuleiro carregado.\n\n");
 		return false;
 	}
 	if (p->arg == NULL) {
@@ -135,7 +164,7 @@ bool pintar(PARAMETROS *p) {
 
 bool riscar(PARAMETROS *p) {
 	if (!p->estado->board_loaded) {
-		fprintf(stderr, "Erro: nenhum tabuleiro carregado.\n");
+		fprintf(stderr, "Erro: nenhum tabuleiro carregado.\n\n");
 		return false;
 	}
 	if (p->arg == NULL) {
@@ -161,7 +190,7 @@ bool riscar(PARAMETROS *p) {
 
 bool undo(PARAMETROS *p) {
 	if (!p->estado->board_loaded) {
-		fprintf(stderr, "Erro: nenhum tabuleiro carregado.\n");
+		fprintf(stderr, "Erro: nenhum tabuleiro carregado.\n\n");
 		return false;
 	}
 	if (p->estado->move_stack == NULL || p->estado->num_moves == 0) {
@@ -195,15 +224,16 @@ bool undo(PARAMETROS *p) {
 			printf("%2d) ", i);
 		pop_move(p->estado, p->suppress);
 	}
-	putchar('\n');
-	if (!p->suppress)
+	if (!p->suppress) {
+		putchar('\n');
 		printf("%d jogada(s) desfeita(s).\n", passos);
+	}
 	return true;
 }
 
 bool verificar(PARAMETROS *p) {
 	if (!p->estado->board_loaded) {
-		fprintf(stderr, "Erro: nenhum tabuleiro carregado.\n");
+		fprintf(stderr, "Erro: nenhum tabuleiro carregado.\n\n");
 		return false;
 	}
 	if (p->arg != NULL) {
@@ -244,7 +274,7 @@ bool ajuda(PARAMETROS *p) {
 	bool original_suppress = p->suppress;
 	p->suppress = true;
 	if (!p->estado->board_loaded) {
-		fprintf(stderr, "Erro: nenhum tabuleiro carregado.\n");
+		fprintf(stderr, "Erro: nenhum tabuleiro carregado.\n\n");
 		return false;
 	}
 	if (p->arg != NULL) {
@@ -293,7 +323,7 @@ bool ajuda_repete(PARAMETROS *p) {
 	bool original_suppress = p->suppress;
 	p->suppress = true;
 	if (!p->estado->board_loaded) {
-		fprintf(stderr, "Erro: nenhum tabuleiro carregado.\n");
+		fprintf(stderr, "Erro: nenhum tabuleiro carregado.\n\n");
 		return false;
 	}
 	if (p->arg != NULL) {
@@ -331,36 +361,38 @@ bool ajuda_repete(PARAMETROS *p) {
 
 bool resolver(PARAMETROS *p) {
 	if (!p->estado->board_loaded) {
-		fprintf(stderr, "Erro: nenhum tabuleiro carregado.\n");
+		fprintf(stderr, "Erro: nenhum tabuleiro carregado.\n\n");
 		return false;
 	}
 	if (p->arg != NULL) {
 		fprintf(stderr, "Erro: comando resolver não recebe argumentos.\n");
 		return false;
 	}
-	ESTADO *copia_estado = copy_estado(p->estado);
 	ESTADO *original_estado = copy_estado(p->estado);
-	bool result = dfs(copia_estado);
-	if (result) {
+	bool found = false;
+	while (!found && p->estado->num_moves >= 0) {
 		p->estado->ajuda_dada = true;
 		p->estado->num_ajuda = 0;
-		for (int i = 0; i < p->estado->num_rows; i++) {
-			for (int j = 0; j < p->estado->num_cols; j++) {
-				if (p->estado->board[i][j] != copia_estado->board[i][j]) {
-					p->estado->num_ajuda++;
-					push_move(i, j, p->estado->board[i][j], p->estado);
-					p->estado->board[i][j] = copia_estado->board[i][j];
-				}
-			}
+		found = dfs(p->estado);
+		if (!found && p->estado->num_moves > 0) {
+			PARAMETROS new_p;
+			new_p.estado = p->estado;
+			new_p.arg = NULL;
+			new_p.suppress = true;
+			undo(&new_p);
 		}
-		if (!p->suppress)
-			printf("Tabuleiro resolvido com sucesso!\n");
+	}
+	if (!found) {
+		p->estado = original_estado;
+		if (!p->suppress) {
+			printf("Não foi possível encontrar uma solução para este tabuleiro.\n");
+		}
+		return false;
 	}
 	else {
 		if (!p->suppress)
-			printf("Não foi possível encontrar uma solução para este tabuleiro.\n");
+			printf("Tabuleiro resolvido com sucesso!\n");
 	}
-	free_estado(copia_estado);
 	free_estado(original_estado);
-	return result;
+	return found;
 }
