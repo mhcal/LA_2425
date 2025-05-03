@@ -18,26 +18,20 @@ void repl() {
 	comandos['r' - 'A'] = riscar;
 	comandos['d' - 'A'] = undo;
 	comandos['v' - 'A'] = verificar;
-	//comandos['a' - 'A'] = ajuda;
+	comandos['a' - 'A'] = ajuda;
+	comandos['h' - 'A'] = help;
+	comandos['A' - 'A'] = ajuda_repete;
+	comandos['R' - 'A'] = resolver;
 	ESTADO estado;
 	estado.looping = true;
 	estado.board = NULL;
 	estado.board_loaded = false;
 	estado.move_stack = NULL;
 	estado.num_moves = 0;
-	estado.help_trigger = false;
-	printf("-------------------------------- COMANDOS --------------------------------\n"
-			" * g <filename>   - grava o estado atual do jogo num ficheiro\n"
-			" * l <filename>   - lê o estado do jogo de um ficheiro\n"
-			" * b <coordenada> - coloca a letra na coordenada em maiúscula\n"
-			" * r <coordenada> - risca a letra na coordenada correspondente\n"
-			" * v              - aponta as restrições violadas no estado atual\n"
-			" * a              - muda as casas que podem ser inferidas no estado atual\n"
-			" * A              - invoca o comando a enquanto o jogo sofrer alterações\n"
-			" * R              - resolve o jogo\n"
-			" * d <num>        - desfaz as últimas <num> jogadas (default = 1)\n"
-			" * s              - sair do jogo\n"
-			"--------------------------------------------------------------------------\n\n");
+	estado.num_ajuda = 0;
+	estado.ajuda_dada = false;
+	(void)help(NULL);
+	putchar('\n');
 	while (estado.looping) {
 		printf("> ");
 		char line[LINE_SIZE] = {0};
@@ -51,12 +45,25 @@ void repl() {
 		int num_args = sscanf(line, "%c %s", &cmd, arg);
 		cmd -= 'A';
 		if (cmd < 0 || cmd >= 60 || comandos[(int)cmd] == NULL)
-			fprintf(stderr, "Erro: código de comando inválido.\n");
+			fprintf(stderr, "Erro: código de comando inválido.\n\n");
+		/*
 		else if (comandos[(int)cmd]((num_args >= 2) ? arg : NULL, &estado)) {
 			putchar('\n');
 			print_board(&estado);
 		}
-		putchar('\n');
+		*/
+		else {
+			PARAMETROS p;
+			p.arg = (num_args >= 2) ? arg : NULL;
+			p.estado = &estado;
+			p.suppress = false;
+			(void)comandos[(int)cmd](&p);
+			if (estado.looping && estado.board_loaded) {
+				putchar('\n');
+				print_board(&estado);
+				putchar('\n');
+			}
+		}
 	}
 	free_board(&estado);
 }

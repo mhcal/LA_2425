@@ -18,16 +18,20 @@ bool push_move(int row, int col, char prev, ESTADO *e) {
 	return true;
 }
 
-bool pop_move(ESTADO *e) {
+bool pop_move(ESTADO *e, bool suppress) {
 	if (e->move_stack == NULL) {
 		fprintf(stderr, "Erro: move stack vazia.\n");
 		return false;
 	}
+	if (!suppress)
+		printf("%c%d : %c => %c\n", e->move_stack->col + 'a', e->move_stack->row + 1, e->board[e->move_stack->row][e->move_stack->col], e->move_stack->prev);
 	e->board[e->move_stack->row][e->move_stack->col] = e->move_stack->prev;
 	MOVE *temp = e->move_stack;
 	e->move_stack = e->move_stack->next;
 	free(temp);
 	e->num_moves--;
+	if (e->num_ajuda > 0)
+		e->num_ajuda--;
 	return true;
 }
 
@@ -221,10 +225,12 @@ void pinta_vizinhos(int row, int col, ESTADO *e) {
 		return;
 	int directions[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 	for (int i = 0; i < 4; i++) {
-		int dr = directions[i][0];
-		int dc = directions[i][1];
-		if (is_valid_coord(dr, dc, e) && is_minuscula(e->board[dr][dc]))
+		int dr = row + directions[i][0];
+		int dc = col + directions[i][1];
+		if (is_valid_coord(dr, dc, e) && is_minuscula(e->board[dr][dc])) {
+			push_move(dr, dc, e->board[dr][dc], e);
 			e->board[dr][dc] -= 32;
+		}
 	}
 }
 
@@ -234,14 +240,132 @@ void risca_iguais(int row, int col, ESTADO *e) {
 	char letter = to_lower(e->board[row][col]);
 	// procura na linha (linha fixa, coluna variavel)
 	for (int i = 0; i < e->num_cols; i++) {
-		char current = e->board[row][i];
-		if (i != col && current == letter)
+		char current = to_lower(e->board[row][i]);
+		if (i != col && current == letter) {
+			push_move(row, i, e->board[row][i], e);
 			e->board[row][i] = '#';
+		}
 	}
 	// procura na coluna (linha variavel, coluna fixa)
 	for (int i = 0; i < e->num_rows; i++) {
-		char current = e->board[i][col];
-		if (i != row && current == letter)
+		char current = to_lower(e->board[i][col]);
+		if (i != row && current == letter) {
+			push_move(i, col, e->board[i][col], e);
 			e->board[i][col] = '#';
+		}
 	}
+}
+
+// a implementação atual não copia a stack de movimentos (não há necessidade, visto que os estados copiados só são utilizados para verificações/look-ups
+ESTADO *copy_estado(ESTADO *src) {
+	if (src == NULL) {
+		fprintf(stderr, "Erro: tentando copiar um estado nulo.\n");
+		return NULL;
+	}
+	ESTADO *dest = (ESTADO *)malloc(sizeof(ESTADO));
+	if (dest == NULL) {
+		fprintf(stderr, "Erro: falha na alocação de memória para estado.\n");
+		return NULL;
+	}
+	dest->looping = src->looping;
+	dest->num_rows = src->num_rows;
+	dest->num_cols = src->num_cols;
+	dest->board_loaded = src->board_loaded;
+	dest->num_moves = 0;
+	dest->move_stack = NULL;
+	dest->num_ajuda = 0;
+	dest->num_ajuda = false;
+	if (src->board_loaded && src->board != NULL) {
+		dest->board = (char **)malloc(src->num_rows * sizeof(char *));
+		if (dest->board == NULL) {
+			fprintf(stderr, "Erro: falha na alocação de memória para tabuleiro.\n");
+			free(dest);
+			return NULL;
+		}
+		for (int i = 0; i < src->num_rows; i++) {
+			dest->board[i] = (char *)malloc(src->num_cols * sizeof(char));
+			if (dest->board[i] == NULL) {
+				for (int j = 0; j < i; j++)
+					free(dest->board[j]);
+				free(dest->board);
+				free(dest);
+				fprintf(stderr, "Erro: falha na alocação de memória para linha do tabuleiro.\n");
+				return NULL;
+			}
+			memcpy(dest->board[i], src->board[i], src->num_cols * sizeof(char));
+		}
+	}
+	else
+		dest->board = NULL;
+	return dest;
+}
+
+void free_estado(ESTADO *e) {
+	if (e == NULL)
+		return;
+	if (e->board != NULL) {
+		for (int i = 0; i < e->num_rows; i++)
+			free(e->board[i]);
+		free(e->board);
+	}
+	free_move_stack(e);
+	free(e);
+}
+
+bool isola(int row, int col, ESTADO *e) {
+	char original = e->board[row][col];
+	if (!is_minuscula(original) || !verifica_caminho(e))
+		return false;
+	e->board[row][col] = '#';
+	bool result = !verifica_caminho(e);
+	e->board[row][col] = original;
+	return result;
+}
+
+// mesma lógica do verificar, no entanto dá um early return no primeiro erro encontrado (mais rápido para o dfs).
+bool verifica_aux(ESTADO *e) {
+	for (int i = 0; i < e->num_rows; i++) {
+		for (int j = 0; j < e->num_cols; j++) {
+			if (is_branca(e->board[i][j])) {
+				if (!verifica_branca(i, j, e))
+					return false;
+			}
+			if (is_riscada(e->board[i][j])) {
+				if (!verifica_riscada(i, j, e))
+					return false;
+			}
+		}
+	}
+	return verifica_caminho(e);
+}
+
+bool acha_minuscula(ESTADO *e, POSITION *pos) {
+	for (int i = 0; i < e->num_rows; i++) {
+		for (int j = 0; j < e->num_cols; j++) {
+			if (is_minuscula(e->board[i][j])) {
+				pos->row = i;
+				pos->col = j;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool dfs(ESTADO *e) {
+	if (!verifica_aux(e))
+		return false;
+	POSITION pos;
+	if (!acha_minuscula(e, &pos))
+		return true;
+	int row = pos.row; int col = pos.col;
+	char prev = e->board[row][col];
+	e->board[row][col] -= 32;
+	if (verifica_aux(e) && dfs(e))
+		return true;
+	e->board[row][col] = '#';
+	if (verifica_aux(e) && dfs(e))
+		return true;
+	e->board[row][col] = prev;
+	return false;
 }

@@ -28,9 +28,20 @@ typedef struct estado {
 	bool board_loaded;
 	MOVE *move_stack;
 	int num_moves;
-	bool help_trigger;
+	bool ajuda_dada;
+	int num_ajuda;
 } ESTADO;
 
-typedef bool (*COMANDO)(char *arg, ESTADO *e);
+typedef struct {
+	char *arg;
+	ESTADO *estado;
+	bool suppress;
+} PARAMETROS;
+
+typedef struct {
+	int row, col;
+} POSITION;
+
+typedef bool (*COMANDO)(PARAMETROS *p);
 
 #endif

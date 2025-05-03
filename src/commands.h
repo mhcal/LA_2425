@@ -4,13 +4,16 @@
 #include <stdbool.h>
 #include "types.h"
 
-bool sair(char *arg, ESTADO *e);
-bool ler(char *arg, ESTADO *e);
-bool gravar(char *arg, ESTADO *e);
-bool pintar(char *arg, ESTADO *e);
-bool riscar(char *arg, ESTADO *e);
-bool undo(char *arg, ESTADO *e);
-bool verificar(char *arg, ESTADO *e);
-bool ajuda(char *arg, ESTADO *e);
+bool help(PARAMETROS *p);
+bool sair(PARAMETROS *p);
+bool ler(PARAMETROS *p);
+bool gravar(PARAMETROS *p);
+bool pintar(PARAMETROS *p);
+bool riscar(PARAMETROS *p);
+bool undo(PARAMETROS *p);
+bool verificar(PARAMETROS *p);
+bool ajuda(PARAMETROS *p);
+bool ajuda_repete(PARAMETROS *p);
+bool resolver(PARAMETROS *p);
 
 #endif
