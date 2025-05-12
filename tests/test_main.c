@@ -72,6 +72,43 @@ int main () {
 		return CU_get_error();
 	}
 
+	if (NULL == CU_add_test(pSuite, "test_pinta_vizinhos",test_pinta_vizinhos)) {
+		CU_cleanup_registry();
+		return CU_get_error();
+	}
+
+	if (NULL == CU_add_test(pSuite, "test_risca_iguais",test_risca_iguais)) {
+		CU_cleanup_registry();
+		return CU_get_error();
+	}
+
+	if (NULL == CU_add_test(pSuite, "test_copy_estado",test_copy_estado)) {
+		CU_cleanup_registry();
+		return CU_get_error();
+	}
+
+	if (NULL == CU_add_test(pSuite, "test_isola",test_isola)) {
+		CU_cleanup_registry();
+		return CU_get_error();
+	}
+
+
+	if (NULL == CU_add_test(pSuite, "test_ajuda",test_ajuda)) {
+		CU_cleanup_registry();
+		return CU_get_error();
+	}
+
+
+	if (NULL == CU_add_test(pSuite, "test_ajuda_repete",test_ajuda_repete)) {
+		CU_cleanup_registry();
+		return CU_get_error();
+	}
+
+	if (NULL == CU_add_test(pSuite, "test_resolver",test_resolver)) {
+		CU_cleanup_registry();
+		return CU_get_error();
+	}
+
 	CU_basic_run_tests();
 	return CU_get_error();
 }
