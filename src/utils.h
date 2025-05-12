@@ -26,7 +26,9 @@ bool isola(int row, int col, ESTADO *e);
 ESTADO *copy_estado(ESTADO *src);
 void free_estado(ESTADO *e);
 bool verifica_aux(ESTADO *e);
-bool acha_minuscula(ESTADO *e, POSITION *pos);
+//bool acha_minuscula(ESTADO *e, POSITION *pos);
+int conta_jogadas(int row, int col, ESTADO *e);
+bool melhor_posicao(ESTADO *e, POSITION *pos);
 bool dfs(ESTADO *e);
 
 #endif

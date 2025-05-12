@@ -16,7 +16,6 @@ bool help(PARAMETROS *p) {
 		" * A              - invoca o comando a enquanto o jogo sofrer alterações\n"
 		" * R              - resolve o jogo\n"
 		" * d <num>        - desfaz as últimas <num> jogadas (default = 1)\n"
-		"   d ajuda        - desfaz todas jogadas desde a última invocação de a/A/R\n"
 		" * h              - imprime comandos disponíveis\n"
 		" * s              - sair do jogo\n"
 		"--------------------------------------------------------------------------\n");
@@ -159,6 +158,10 @@ bool pintar(PARAMETROS *p) {
 		if (!p->suppress)
 			printf("Letra na posição %s foi colocada em maiúscula.\n", p->arg);
 	}
+	if (p->estado->ajuda_dada) {
+		p->estado->ajuda_dada = false;
+		p->estado->num_ajuda = 0;
+	}
 	return true;
 }
 
@@ -185,6 +188,10 @@ bool riscar(PARAMETROS *p) {
 		if (!p->suppress)
 			printf("Letra na posição %s foi riscada.\n", p->arg);
 	}
+	if (p->estado->ajuda_dada) {
+		p->estado->ajuda_dada = false;
+		p->estado->num_ajuda = 0;
+	}
 	return true;
 }
 
@@ -199,22 +206,14 @@ bool undo(PARAMETROS *p) {
 	}
 	int passos = 1;
 	if (p->arg != NULL) {
-		if (strcmp(p->arg, "ajuda") == 0) {
-			if (!p->estado->ajuda_dada || p->estado->num_ajuda <= 0) {
-				fprintf(stderr, "Erro: nenhuma ajuda para desfazer.\n");
-				return false;
-			}
-			passos = p->estado->num_ajuda;
-			p->estado->ajuda_dada = false;
-		}
-		else {
-			passos = atoi(p->arg);
-			if (passos <= 0) {
-				fprintf(stderr, "Erro: número de jogadas deve ser um inteiro positivo.\n");
-				return false;
-			}
+		passos = atoi(p->arg);
+		if (passos <= 0) {
+			fprintf(stderr, "Erro: número de jogadas deve ser um inteiro positivo.\n");
+			return false;
 		}
 	}
+	else if (p->estado->ajuda_dada)
+		passos = p->estado->num_ajuda;
 	if (passos > p->estado->num_moves) {
 		fprintf(stderr, "Erro: só existe(m) %d jogada(s) no histórico.\n", p->estado->num_moves);
 		return false;
@@ -227,6 +226,10 @@ bool undo(PARAMETROS *p) {
 	if (!p->suppress) {
 		putchar('\n');
 		printf("%d jogada(s) desfeita(s).\n", passos);
+	}
+	if (p->estado->ajuda_dada) {
+		p->estado->ajuda_dada = false;
+		p->estado->num_ajuda = 0;
 	}
 	return true;
 }
@@ -371,8 +374,8 @@ bool resolver(PARAMETROS *p) {
 	ESTADO *original_estado = copy_estado(p->estado);
 	bool found = false;
 	while (!found && p->estado->num_moves >= 0) {
-		p->estado->ajuda_dada = true;
-		p->estado->num_ajuda = 0;
+		//p->estado->ajuda_dada = true;
+		//p->estado->num_ajuda = 0;
 		found = dfs(p->estado);
 		if (!found && p->estado->num_moves > 0) {
 			PARAMETROS new_p;
@@ -390,6 +393,8 @@ bool resolver(PARAMETROS *p) {
 		return false;
 	}
 	else {
+		p->estado->ajuda_dada = true;
+		p->estado->num_ajuda = p->estado->num_moves - original_estado->num_moves;
 		if (!p->suppress)
 			printf("Tabuleiro resolvido com sucesso!\n");
 	}

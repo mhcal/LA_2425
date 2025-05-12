@@ -11,6 +11,7 @@ void repl() {
 	COMANDO comandos[60];
 	for (int i = 0; i < 60; i++)
 		comandos[i] = NULL;
+	comandos['h' - 'A'] = help;
 	comandos['s' - 'A'] = sair;
 	comandos['l' - 'A'] = ler;
 	comandos['g' - 'A'] = gravar;
@@ -19,7 +20,6 @@ void repl() {
 	comandos['d' - 'A'] = undo;
 	comandos['v' - 'A'] = verificar;
 	comandos['a' - 'A'] = ajuda;
-	comandos['h' - 'A'] = help;
 	comandos['A' - 'A'] = ajuda_repete;
 	comandos['R' - 'A'] = resolver;
 	ESTADO estado;

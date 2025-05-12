@@ -370,34 +370,59 @@ bool verifica_aux(ESTADO *e) {
 	return verifica_caminho(e);
 }
 
-bool acha_minuscula(ESTADO *e, POSITION *pos) {
+// conta o numero de jogadas possíveis de uma determinada casa do tabuleiro
+int conta_jogadas(int row, int col, ESTADO *e) {
+	int num_jogadas = 0;
+	char original = e->board[row][col];
+	e->board[row][col] = original - 32;
+	if (verifica_branca(row, col, e)) num_jogadas++;
+	e->board[row][col] = '#';
+	if (verifica_riscada(row, col, e)) num_jogadas++;
+	e->board[row][col] = original;
+	return num_jogadas;
+}
+
+/*
+ * preenche pos com a posição do tabuleiro com o menor número de jogadas possíveis
+ * (reduz drasticamente o espaço de procura)
+*/
+bool melhor_posicao(ESTADO *e, POSITION *pos) {
+	bool found = false;
 	for (int i = 0; i < e->num_rows; i++) {
 		for (int j = 0; j < e->num_cols; j++) {
 			if (is_minuscula(e->board[i][j])) {
-				pos->row = i;
-				pos->col = j;
-				return true;
+				int num_jogadas = conta_jogadas(i, j, e);
+				if (num_jogadas > 0) {
+					pos->row = i;
+					pos->col = j;
+					found = true;
+					if (num_jogadas == 1) return true;
+				}
 			}
 		}
 	}
-	return false;
+	return found;
 }
 
 bool dfs(ESTADO *e) {
-	if (!verifica_aux(e))
-		return false;
+	if (!verifica_aux(e)) return false;
 	POSITION pos;
-	if (!acha_minuscula(e, &pos))
-		return true;
-	int row = pos.row; int col = pos.col;
+	/*
+	 * como já validamos o tabuleiro, caso não exista nenhuma jogada possível, então
+	 * podemos concluir que chegamos ao fim do jogo.
+	*/
+	if (!melhor_posicao(e, &pos)) return true;
+	int row = pos.row;
+	int col = pos.col;
 	char prev = e->board[row][col];
 	push_move(row, col, prev, e);
+	// tenta pintar de branca
 	e->board[row][col] -= 32;
-	if (verifica_aux(e) && dfs(e))
-		return true;
+	if (verifica_branca(row, col, e) && dfs(e)) return true;
+	// tenta riscar
 	e->board[row][col] = '#';
-	if (verifica_aux(e) && dfs(e))
-		return true;
-	pop_move(e, 1);
+	if (verifica_riscada(row, col, e) && dfs(e)) return true;
+	// Backtrack
+	pop_move(e, true);
 	return false;
 }
