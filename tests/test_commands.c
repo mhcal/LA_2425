@@ -6,6 +6,7 @@
 #include "../src/types.h"
 #include "../src/commands.h"
 #include "../src/utils.h"
+#include "helpers.h"
 
 /* 
 	Function that compares a stored board, obtained from the output of a 
@@ -47,28 +48,13 @@ void compare_boards(char* filename, ESTADO *e) {
 
 void test_gravar() {
 	PARAMETROS p;
-	p.estado = (ESTADO*)malloc(sizeof(ESTADO));
-	p.estado->board = NULL;
-	p.estado->num_rows = 5;
-	p.estado->num_cols = 5;
-	p.estado->board_loaded = true;
-	p.estado->move_stack = NULL;
+	p_init(&p);
 	int rows = 5;
 	int cols = 5;
 	// example board initialization
 	allocate_board(rows, cols, p.estado);
-	char example[5][5] = {
-		{'e', 'c', 'a', 'd', 'c'},
-		{'d', 'c', 'd', 'e', 'c'},
-		{'b', 'd', 'd', 'c', 'e'},
-		{'c', 'd', 'e', 'e', 'b'},
-		{'a', 'c', 'c', 'b', 'b'}
-	};
-	
-	for (int i = 0; i < p.estado->num_rows; i++) {
-		for (int j = 0; j < p.estado->num_cols; j++)
-			p.estado->board[i][j] = example[i][j];
-	}
+	example_init(&p);
+
 	CU_ASSERT_EQUAL(system("mkdir -p boards"), 0);
 	CU_ASSERT_FALSE(gravar(&p));
 	char* test_filename = "test_board";
@@ -81,7 +67,7 @@ void test_gravar() {
 
 void test_sair() {
 	PARAMETROS p;
-	p.estado = (ESTADO*)malloc(sizeof(ESTADO));
+	p_init(&p);
 	p.estado->looping = true;
 	p.arg = NULL;
 	CU_ASSERT_TRUE(sair(&p));
@@ -101,16 +87,9 @@ void test_sair() {
 
 void test_ler() {
 	PARAMETROS p;
-	p.estado = (ESTADO*)malloc(sizeof(ESTADO));
-	p.estado->board = NULL;
-	p.estado->num_rows = 0;
-	p.estado->num_cols = 0;
-	p.estado->board_loaded = false;
-	p.estado->move_stack = NULL;	
+	p_init(&p);	
 	
 	CU_ASSERT_EQUAL(system("mkdir -p boards"), 0);
-	
-	
 	char* test_filename = "test_read_board";
 	char filepath[100];
 	snprintf(filepath, sizeof(filepath), "boards/%s", test_filename);
@@ -140,29 +119,17 @@ void test_ler() {
 
 void test_pintar(){
 	PARAMETROS p;
-	p.estado = (ESTADO*)malloc(sizeof(ESTADO));
-	p.estado->board = NULL;
-	p.estado->move_stack = NULL;
- 	p.estado->board_loaded = true;
+	p_init(&p);
 	p.estado->num_rows = 5;
 	p.estado->num_cols = 5;
 	int rows = 5;
 	int cols = 5;
 
 	// example board initialization
+	p.estado->board_loaded  = true;
 	allocate_board(rows, cols, p.estado);
-	char example[5][5] = {
-		{'e', 'c', 'a', 'd', 'c'},
-		{'d', 'c', 'd', 'e', 'c'},
-		{'b', 'd', 'd', 'c', 'e'},
-		{'c', 'd', 'e', 'e', 'b'},
-		{'a', 'c', 'c', 'b', 'b'}
-	};
+	example_init(&p);
 
-	for (int i = 0; i < p.estado->num_rows; i++) {
-		for (int j = 0; j < p.estado->num_cols; j++)
-			p.estado->board[i][j] = example[i][j];
-	}
 	p.arg = "a1";
 	CU_ASSERT_TRUE(pintar(&p));
 	p.arg = "e5";
@@ -181,29 +148,17 @@ void test_pintar(){
 
 void test_riscar(){
 	PARAMETROS p;
-	p.estado = (ESTADO*)malloc(sizeof(ESTADO));
-	p.estado->board = NULL;
-	p.estado->move_stack = NULL;
- 	p.estado->board_loaded = true;
+	p_init(&p);
 	p.estado->num_rows = 5;
 	p.estado->num_cols = 5;
 	int rows = 5;
 	int cols= 5;
 
 	// example board initialization
+	p.estado->board_loaded  = true;
 	allocate_board(rows, cols, p.estado);
-	char example[5][5] = {
-		{'e', 'c', 'a', 'd', 'c'},
-		{'d', 'c', 'd', 'e', 'c'},
-		{'b', 'd', 'd', 'c', 'e'},
-		{'c', 'd', 'e', 'e', 'b'},
-		{'a', 'c', 'c', 'b', 'b'}
-	};
+	example_init(&p);
 
-	for (int i = 0; i < p.estado->num_rows; i++) {
-		for (int j = 0; j < p.estado->num_cols; j++)
-			p.estado->board[i][j] = example[i][j];
-	}
 	p.arg = "a1";
 	CU_ASSERT_TRUE(riscar(&p)); // limit 1 (first element)
 	p.arg = "e5";
@@ -222,30 +177,16 @@ void test_riscar(){
 
 void test_undo() {
 	PARAMETROS p;
-	p.estado = (ESTADO*)malloc(sizeof(ESTADO));
-	p.estado->board = NULL;
-	p.estado->move_stack = NULL;
-	p.estado->num_moves = 0;
-	p.estado->board_loaded = true;
+	p_init(&p);
 	int rows = 5;
 	int cols= 5;
 	p.estado->num_rows = rows;
 	p.estado->num_cols = cols;
 
 	// example board initialization
+	p.estado->board_loaded  = true;
 	allocate_board(rows, cols, p.estado);
-	char example[5][5] = {
-		{'e', 'c', 'a', 'd', 'c'},
-		{'d', 'c', 'd', 'e', 'c'},
-		{'b', 'd', 'd', 'c', 'e'},
-		{'c', 'd', 'e', 'e', 'b'},
-		{'a', 'c', 'c', 'b', 'b'}
-	};
-
-	for (int i = 0; i < p.estado->num_rows; i++) {
-		for (int j = 0; j < p.estado->num_cols; j++)
-			p.estado->board[i][j] = example[i][j];
-	}
+	example_init(&p);
 
 	// move stack initialization with 'pintar' function
 	p.arg = "a1";
@@ -259,7 +200,7 @@ void test_undo() {
 
 	p.arg = "d4";
 	pintar(&p);
-
+	p.estado->num_moves = 4;
 	p.arg = NULL;
 	CU_ASSERT_TRUE(undo(&p)); // undo one move
 
@@ -270,9 +211,7 @@ void test_undo() {
 	CU_ASSERT_FALSE(undo(&p));
 
 	PARAMETROS p2;
-	p2.estado = (ESTADO*)malloc(sizeof(ESTADO));
-	p2.estado->board_loaded = false;
-	p2.arg = "a1";
+	p_init(&p2);
 	CU_ASSERT_FALSE(undo(&p2)); // test with unloaded baord
 	free_move_stack(p.estado);
 	free_board(p.estado);
@@ -282,9 +221,7 @@ void test_undo() {
 
 void test_verificar() {
 	PARAMETROS p;
-	p.estado = (ESTADO*)malloc(sizeof(ESTADO));
-	p.estado->board = NULL;
-	p.estado->move_stack = NULL;
+	p_init(&p);
 	p.estado->num_rows = 5;
 	p.estado->num_cols = 5;
 	int rows = 5;

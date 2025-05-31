@@ -383,6 +383,7 @@ bool resolver(PARAMETROS *p) {
 			new_p.arg = NULL;
 			new_p.suppress = true;
 			undo(&new_p);
+			original_estado->num_moves--;
 		}
 	}
 	if (!found) {

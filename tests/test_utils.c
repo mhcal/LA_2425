@@ -5,7 +5,7 @@
 #include "../src/types.h"
 #include "../src/utils.h"
 #include "../src/commands.h"
-
+#include "helpers.h"
 void test_parse_coord() {
 	ESTADO e;
 	int col;
@@ -27,9 +27,7 @@ void test_print_board() {
 
 void test_verifica_branca() {
 	PARAMETROS p;
-	p.estado = (ESTADO*)malloc(sizeof(ESTADO));
-	p.estado->board = NULL;
-	p.estado->move_stack = NULL;
+	p_init(&p);
 	int rows, cols;
 	rows = 5;
 	cols = 5;
@@ -38,17 +36,7 @@ void test_verifica_branca() {
 	p.estado->board_loaded = true;
 
 	allocate_board(rows, cols, p.estado);
-	char example[5][5] = {
-		{'e', 'c', 'a', 'd', 'c'},
-		{'d', 'c', 'd', 'e', 'c'},
-		{'b', 'd', 'd', 'c', 'e'},
-		{'c', 'd', 'e', 'e', 'b'},
-		{'a', 'c', 'c', 'b', 'b'}
-	};
-	for (int i = 0; i < p.estado->num_rows; i++) {
-		for (int j = 0; j < p.estado->num_cols; j++)
-			p.estado->board[i][j] = example[i][j];
-	}
+	example_init(&p);
 	// board modifications
 	p.arg = "a1";
 	pintar(&p);
@@ -71,9 +59,7 @@ void test_verifica_branca() {
 
 void test_verifica_riscada() {
 	PARAMETROS p;
-	p.estado = (ESTADO*)malloc(sizeof(ESTADO));
-	p.estado->board = NULL;
-	p.estado->move_stack = NULL;
+	p_init(&p);
 	int rows, cols;
 	rows = 5;
 	cols = 5;
@@ -82,17 +68,7 @@ void test_verifica_riscada() {
 	p.estado->board_loaded = true;
 
 	allocate_board(rows, cols, p.estado);
-	char example[5][5] = {
-		{'e', 'c', 'a', 'd', 'c'},
-		{'d', 'c', 'd', 'e', 'c'},
-		{'b', 'd', 'd', 'c', 'e'},
-		{'c', 'd', 'e', 'e', 'b'},
-		{'a', 'c', 'c', 'b', 'b'}
-	};
-	for (int i = 0; i < p.estado->num_rows; i++) {
-		for (int j = 0; j < p.estado->num_cols; j++)
-			p.estado->board[i][j] = example[i][j];
-	}
+	example_init(&p);
 	p.arg = "b2";
 	riscar(&p);
 	p.arg = "b1";
@@ -166,11 +142,7 @@ void test_verifica_caminho() {
 
 void test_pinta_vizinhos() {
 	PARAMETROS p;
-	p.estado = (ESTADO*)malloc(sizeof(ESTADO));
-	p.estado->board = NULL;
-	p.estado->move_stack = NULL;
-	p.estado->num_moves = 0;
-	p.estado->board_loaded = true;
+	p_init(&p);
 	int rows = 5;
 	int cols= 5;
 	p.estado->num_rows = rows;
@@ -208,13 +180,7 @@ void test_pinta_vizinhos() {
 	}
 	
 	PARAMETROS p2;
-	p2.estado = (ESTADO*)malloc(sizeof(ESTADO));
-	p2.estado->board = NULL;
-	p2.estado->move_stack = NULL;
-	p2.estado->num_moves = 0;
-	p2.estado->board_loaded = true;
-	p2.estado->num_rows = rows;
-	p2.estado->num_cols = cols;
+	p_init(&p2);
 
 	// example board initialization
 	allocate_board(rows, cols, p2.estado);
@@ -249,13 +215,7 @@ void test_pinta_vizinhos() {
 	}
 
 	PARAMETROS p3;
-	p3.estado = (ESTADO*)malloc(sizeof(ESTADO));
-	p3.estado->board = NULL;
-	p3.estado->move_stack = NULL;
-	p3.estado->num_moves = 0;
-	p3.estado->board_loaded = true;
-	p3.estado->num_rows = 5;
-	p3.estado->num_cols = 5;
+	p_init(&p3);
 	allocate_board(rows,cols,p3.estado);
 
 	char test3[5][5] = {
@@ -293,11 +253,7 @@ void test_pinta_vizinhos() {
 
 void test_risca_iguais() {
 	PARAMETROS p;
-	p.estado = (ESTADO*)malloc(sizeof(ESTADO));
-	p.estado->board = NULL;
-	p.estado->move_stack = NULL;
-	p.estado->num_moves = 0;
-	p.estado->board_loaded = true;
+	p_init(&p);
 	int rows = 5;
 	int cols= 5;
 	p.estado->num_rows = rows;
@@ -335,11 +291,7 @@ void test_risca_iguais() {
 	}
 	
 	PARAMETROS p2;
-	p2.estado = (ESTADO*)malloc(sizeof(ESTADO));
-	p2.estado->board = NULL;
-	p2.estado->move_stack = NULL;
-	p2.estado->num_moves = 0;
-	p2.estado->board_loaded = true;
+	p_init(&p2);
 	p2.estado->num_rows = rows;
 	p2.estado->num_cols = cols;
 
@@ -376,11 +328,7 @@ void test_risca_iguais() {
 	}
 
 	PARAMETROS p3;
-	p3.estado = (ESTADO*)malloc(sizeof(ESTADO));
-	p3.estado->board = NULL;
-	p3.estado->move_stack = NULL;
-	p3.estado->num_moves = 0;
-	p3.estado->board_loaded = true;
+	p_init(&p3);
 	p3.estado->num_rows = 5;
 	p3.estado->num_cols = 5;
 	allocate_board(rows,cols,p3.estado);
@@ -444,6 +392,7 @@ int compare_estado(ESTADO *e, ESTADO *e2) {
 
 	return 0;
 }
+
 void test_copy_estado(){
 	ESTADO e;
 	e.looping = true;

@@ -7,8 +7,8 @@
 - Miguel Calçado (A109361)
 
 ## Setup
-After running `make jogo`, an executable will be generated (`build/jogo`).
+After running `make jogo`, a `jogo` executable will be generated at the root directory.
 
-All boards are read and written in the `build/boards/` subdirectory.
+All boards are read and written from the `boards/` directory.
 
-`make testar` will run all CUnit tests.
+`make testar` will run all CUnit tests and generate gcov test coverage reports at `build/coverage/`.
