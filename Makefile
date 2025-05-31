@@ -28,9 +28,9 @@ jogo: $(OBJ) | $(BOARD_DIR)
 testar: $(TEST_OBJ) | $(BOARD_DIR) $(COV_DIR)
 	$(CC) $(CCOV) $(CFLAGS) -o $(BUILD_DIR)/testar $^ $(LDLIBS)
 	./$(BUILD_DIR)/testar
-	gcov --source-prefix=$(SRC_DIR) $(OBJ_DIR)/commands.gcno
-	gcov --source-prefix=$(SRC_DIR) $(OBJ_DIR)/utils.gcno
-	mv *.gc* $(COV_DIR)
+	gcov --source-prefix=$(SRC_DIR) $(OBJ_DIR)/commands.gcno -r
+	gcov --source-prefix=$(SRC_DIR) $(OBJ_DIR)/utils.gcno -r
+	mv *.gcov $(COV_DIR)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 	$(CC) $(CCOV) $(CFLAGS) -c -o $@ $<
